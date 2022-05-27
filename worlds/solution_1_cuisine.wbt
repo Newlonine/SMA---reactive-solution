@@ -1,0 +1,137 @@
+#VRML_SIM R2022a utf8
+WorldInfo {
+  basicTimeStep 16
+}
+Viewpoint {
+  orientation 0.2809597398093297 0.03749555497394185 -0.9589868132375281 2.8870129163034752
+  position 7.318839789699549 1.7791877420390958 4.942028318639905
+}
+Background {
+  skyColor [
+    0.4 0.7 1
+  ]
+}
+RectangleArena {
+  rotation 0 1 0 0
+  floorSize 3 6
+}
+WoodenChair {
+  translation 0.472855 1.33274 -8.88179e-15
+  rotation 0 0 -1 -1.577345307179586
+  name "wooden chair(3)"
+}
+WoodenChair {
+  translation -0.357969 1.3363 -8.88178e-15
+  rotation 0 0 1 1.4988
+  name "wooden chair(2)"
+}
+DEF WALL_1 Solid {
+  children [
+    Transform {
+      children [
+        Wall {
+          translation -1.5 2.5 0
+          name "wall(3)"
+        }
+        Wall {
+          translation -1.5 1.5 0
+          name "wall(2)"
+        }
+        Window {
+          translation -1.5 0.5 0
+          name "window(1)"
+          size 0.2 1 2.4
+        }
+        Window {
+          translation -1.5 -0.5 0
+          size 0.2 1 2.4
+        }
+        Wall {
+          translation -1.5 -1.5 0
+          name "wall(1)"
+        }
+        Wall {
+          translation -1.5 -2.5 0
+        }
+      ]
+    }
+  ]
+  name "wall_1"
+}
+DEF WALL_2 Solid {
+  translation -1 -3 0
+  rotation 0 0 1 -1.5707953071795862
+  children [
+    Transform {
+      children [
+        Door {
+          translation 0 2 0
+          rotation 0 1 0 0
+        }
+        Wall {
+          translation 0 1 0
+          name "wall(1)"
+        }
+        Wall {
+          rotation 0 1 0 0
+        }
+      ]
+    }
+  ]
+  name "wall_2"
+}
+Fridge {
+  translation 0.1 -2.5 0
+  rotation 0 0 1 1.5707996938995747
+}
+DEF KITCHEN_COMPONENT1 Solid {
+  translation -0.65 -2.5 0.3
+  children [
+    DEF COMPONENT Shape {
+      appearance PBRAppearance {
+        baseColor 0.462745 0.462745 0.462745
+      }
+      geometry Box {
+        size 1.5 0.7 0.9
+      }
+    }
+  ]
+  name "kitchen_component1"
+  boundingObject USE COMPONENT
+}
+DEF KITCHEN_COMPONENT2 Solid {
+  translation -1.09888 -0.24 0.3
+  rotation 0 0 1 1.57
+  children [
+    USE COMPONENT
+  ]
+  name "kitchen_component2"
+  boundingObject USE COMPONENT
+}
+Oven {
+  translation -1.05453 -1.2372 -3.10862e-15
+}
+HotPlate {
+  translation -1.123 -0.712016 0.72
+}
+Worktop {
+  translation -1.09699 -1.65334 0.7
+  rotation 0 0 1 1.5708
+  size 1.3 0.6 0.07
+}
+Sink {
+  translation -1.10099 0.224003 0.79
+}
+Table {
+  translation 0.0602221 1.7864 -5.32907e-15
+  rotation 0 0 1 -1.5707953071795862
+}
+WoodenChair {
+  translation -0.451497 2.30334 -8.88178e-15
+  rotation 0 0 -1 1.38099
+}
+WoodenChair {
+  translation 0.561438 2.19604 -3.90799e-14
+  rotation 0 0 -1 1.65588
+  name "wooden chair(1)"
+}

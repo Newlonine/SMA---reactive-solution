@@ -1,0 +1,50 @@
+#VRML_SIM R2022a utf8
+WorldInfo {
+  randomSeed -1
+}
+Viewpoint {
+  orientation -0.5275217629435477 0.5314934725078051 0.6627484276122627 1.96410979822701
+  position 0.013794736388999636 -0.5943985363252441 2.39961543305649
+}
+Background {
+  skyColor [
+    0.4 0.7 1
+  ]
+}
+RectangleArena {
+  rotation 0 1 0 0
+}
+Wall {
+  translation 0.325621 -0.010805 0
+  name "wall(1)"
+  size 0.02 0.4 0.2
+}
+Robot {
+  controller "supervisor_efficacite"
+  supervisor TRUE
+}
+DEF epuck0 E-puckCameraRecognition {
+  rotation 0 0 1 -2.074765307179586
+  controller "epuck_reactive_behavior_V4"
+}
+DEF epuck1 E-puckCameraRecognition {
+  translation 0 0.25 0
+  rotation 0 0 -1 2.07476
+  name "e-puck(1)"
+  controller "epuck_reactive_behavior_V4"
+  receiver_channel 2
+}
+Wall {
+  translation -0.254379 0.299195 0
+  size 0.02 0.4 0.2
+}
+WoodenBox {
+  translation 0.716973 0.153 0.1
+  rotation 0 0 1 0.386154
+  size 0.2 0.2 0.2
+}
+DEF target CibleWithRange {
+  translation -0.311543 -0.363467 0.055
+  rotation 0 0 1 -0.785395307179586
+  radius 0.2
+}
