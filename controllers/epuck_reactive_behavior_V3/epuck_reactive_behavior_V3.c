@@ -1,10 +1,11 @@
 /*
  * File:          epuck_reactive_behavior_V3.c
  * Date: 19/05/2022
- * Description: Target and robot detection using a camera. Based on epuck_reactive_behavior_V3.c.
- *              If a robot sees nothing, it rotates. 
- *              The more objects it does not see, the more it enlarges its radius. If a robot seens or more objects,
- *              it goes towards it. 
+ * Description: First version to detect other robots using the camera. 
+ *              If the robot does not see any objects (other robots and/or targets) 
+ *              it will circle around and as long it does not see any objects it 
+ *              will reduce its angular speed. If the robot sees 4 or more objects it will drive towards it. 
+ *              This version must be used with supervisor_controller_V2.c. 
  * Author: Nolwenn
  * Modifications:
  */

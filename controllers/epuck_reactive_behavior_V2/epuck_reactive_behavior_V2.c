@@ -1,9 +1,10 @@
 /*
  * File:          epuck_reactive_behavior_V2.c
  * Date: 19/05/2022
- * Description: First version of the reactive behavior of robots using a camera. It also 
- *              uses a receiver to pick up a signal from the supervisor if the robot is within the
- *              target range. 
+ * Description: First version of the reactive behavior 
+ *              of robots to use a camera. It also uses a 
+ *              receiver to pick up a signal from the supervisor 
+ *              if the robot is within the target range. 
  * Author: Nolwenn
  * Modifications: 19/05 : file created
                   23/05 : add a receiver

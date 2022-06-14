@@ -1,7 +1,8 @@
 /*
  * File:          supervisor_controller_V3.c
  * Date: 24/05
- * Description: Same as suprevisor_controller_V2.c but without the emitter.
+ * Description: Same as suprevisor_controller_V2.c but without the emitter. 
+ *              The supervisor and the agents no longer communicate. Can only be used with epuck_reactive_behavior_V4.c.
  * Author: Nolwenn
  * Modifications: 24/05 : remove the emitter
  */

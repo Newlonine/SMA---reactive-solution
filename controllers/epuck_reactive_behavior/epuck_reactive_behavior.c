@@ -1,10 +1,12 @@
 /*
  * File: epuck_reactive_behavior.c
  * Date: 15/05/22
- * Description: First version of the reactive behavior, the target and robots communicate
- *              through receiver and emitter. If a robot picks up a signal from the target, 
- *              it goes towards it.
- *              Use a simple obstacle avoidance.
+ * Description: First version of the reactive behavior, 
+ *              the target and robots communicate through a 
+ *              receiver and an emitter. If a robot picks up a 
+ *              signal from the target, it will steer towards it. 
+ *              It uses a simple obstacle avoidance and has to be used 
+ *              with a target that has goal_emitter.c controller.
  * Author: Nolwenn 
  * Modifications:
  */

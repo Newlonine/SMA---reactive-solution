@@ -1,10 +1,12 @@
 /*
  * File:          supervisor_controller_V2.c
  * Date: 23/05
- * Description: This supervisor places all robots randomly. The robots must be in the world and
- *              have a DEF. It watches each robot's position and if a robot is in the range of the target
- *              it sends a message to the concerned robot. If all robots have found the target, the supervisor pause 
- *              the simulation. Have to be used with epuck_reactive_behavior_V3.c
+ * Description: This supervisor places all the robots randomly. 
+ *              The robots must be in the world and have a DEF prior to that. 
+ *              The supervisor monitors the position of each robot and if one of them is 
+ *              in range of the target the supervisor sends a message to it. When all robots 
+ *              have found the target, the supervisor pauses the simulation. Can be used with 
+ *              epuck_reactive_behavior_V2.c or epuck_reactive_behavior_V3.c.
  * Author: Nolwenn
  * Modifications:
  */

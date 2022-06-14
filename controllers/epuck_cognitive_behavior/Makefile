@@ -35,7 +35,7 @@
 ###
 ### ---- C Sources ----
 ### if your program uses several C source files:
-### C_SOURCES = my_plugin.c my_clever_algo.c my_graphics.c
+	C_SOURCES = obstacle_avoidance.c epuck_cognitive_behavior.c
 ###
 ### ---- C++ Sources ----
 ### if your program uses several C++ source files:

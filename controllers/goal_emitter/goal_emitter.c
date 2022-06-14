@@ -1,10 +1,12 @@
 /*
  * File:          goal_emitter.c
  * Date: 
- * Description: Fist controller for the target, must be used with epuck_reactive_behavior.c
- *              If the target has been found (aka, if it receives a message from a robot), 
- *              it increses its range.
- * Author:
+ * Description: This is the first controller for a target. 
+ *              For it to be detected, it needs to be equipped with an emitter and a receiver. 
+ *              In order to find this target the robots must use epuck_reactive_behavior.c. 
+ *              If the target has been found and receives a message from a robot finding it, 
+ *              it increases its emitting range for each.
+ * Author: Nolwenn
  * Modifications:
  */
 

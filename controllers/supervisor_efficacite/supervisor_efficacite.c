@@ -1,12 +1,11 @@
 /*
  * File:          supervisor_efficacite.c
  * Date: 25/05
- * Description: This supervisor places all robots randomly. The robots must be in the world and
- *              have a DEF. If all robots have found the target, the supervisor pause 
- *              the simulation. It also calculate the efficiency of the program : sum of the distance at_the beginning of
- *              simulation of each robot and the target / sum of distance traveled by each robot.
+ * Description: This supervisor calculates the efficiency of the simulation. 
+ *              The formula is: sum of the distance at step 0 of each robot and the target 
+ *               divided by the sum of the distance traveled by each robot.
  * Author: Nolwenn
- * Modifications:
+ * Modifications: 30/05 - 
  */
 
 #include <webots/robot.h>
@@ -21,7 +20,7 @@
 #define TIME_STEP 32
 #define NB_EPUCK 10
 #define ARENA_SIZE 100
-#define RANGE_DETECTION 0.3
+#define RANGE_DETECTION 0.40
 
 WbNodeRef robots[NB_EPUCK];
 WbFieldRef trans_field[NB_EPUCK];
@@ -44,6 +43,7 @@ double random(int min, int max)
   return res;
 }
 
+
 /*
  * Initialize robots[] and trans_field
  * function based on static void reset(void); in advanced_particle_swarm_optimization_supervisor.c
@@ -51,10 +51,11 @@ double random(int min, int max)
 void set_robots(void)
 {
   // Name of the robot we are linking.
-  char rob[7] = "epuck0";
+  char rob[10];
   int i = 0;
   for (; i < NB_EPUCK; i++)
   {
+    sprintf(rob,"epuck%d", i);
     // Indicate where robot location has to be stored.
     robots[i] = wb_supervisor_node_get_from_def(rob);
     if (robots[i] == NULL)
@@ -66,9 +67,6 @@ void set_robots(void)
     trans_field[i] = wb_supervisor_node_get_field(robots[i], "translation");
     rttn_field[i] = wb_supervisor_node_get_field(robots[i], "rotation");
     controller_field[i] = wb_supervisor_node_get_field(robots[i], "controller");
-
-    // Update robot name.
-    rob[5]++;
   }
 
   return;
@@ -90,9 +88,9 @@ void random_position(void)
 
     r[3] = random(-314, 314);
 
-    wb_supervisor_field_set_sf_vec3f(trans_field[n], p);
+    //wb_supervisor_field_set_sf_vec3f(trans_field[n], p);
     wb_supervisor_field_set_sf_rotation(rttn_field[n], r);
-    wb_supervisor_field_set_sf_string(controller_field[n], "epuck_reactive_behavior_V4");
+    wb_supervisor_field_set_sf_string(controller_field[n], "epuck_cognitive_behavior");
   }
 
   printf("positioning the target...\n");
@@ -100,7 +98,7 @@ void random_position(void)
   p[1] = random(-ARENA_SIZE, ARENA_SIZE);         // y coordonate
   p[2] = 0.055;                                   // z coordinate
 
-  wb_supervisor_field_set_sf_vec3f(trans_field_target, p);
+  //wb_supervisor_field_set_sf_vec3f(trans_field_target, p);
 
   printf("Random positioning done.\n");
   return;
@@ -160,7 +158,9 @@ int main()
   const double *values_cible = wb_supervisor_field_get_sf_vec3f(trans_field_target);
   double distance_min_target[NB_EPUCK];
   double distance_traveled[NB_EPUCK];
-  double efficacite, sum_distance_traveled = 0.0, sum_distance_min = 0.0, last_x = 0.0, last_y = 0.0;
+  double distance_end_simulation[NB_EPUCK];
+  double sum_distance_traveled = 0.0, sum_distance_min = 0.0, last_x = 0.0, last_y = 0.0;
+  double efficiency;
   int i;
 
   bool finished = false;
@@ -176,6 +176,13 @@ int main()
 
     distance_min_target[i] = distance(values_robots[i][0], values_robots[i][1], values_cible[0], values_cible[1]);
     printf("distance minimale target/epuck%d : %g m\n", i, distance_min_target[i]);
+
+    //robot already in the range
+    if(distance_min_target[i] < 0.3){
+      printf("epuck%d is in the range\n", i);
+      robots_stopped[i] = true;
+      distance_end_simulation[i] = distance_min_target[i];
+    }
   }
 
   while (wb_robot_step(TIME_STEP) != -1)
@@ -198,6 +205,8 @@ int main()
           printf("epuck%d is in the range\n", i);
 
           robots_stopped[i] = true;
+          distance_end_simulation[i] = distance(values_robots[i][0], values_robots[i][1], values_cible[0], values_cible[1]);
+
           finished = simulation_finished(robots_stopped);
         }
       }
@@ -209,18 +218,20 @@ int main()
      */
     if (finished)
     {
-      printf("--- All robots have found the target ---\n");
+      printf("\n--- All robots have found the target ---\n");
       for (i = 0; i < NB_EPUCK; i++)
       {
+        printf("distance epuck%d/cible : %g\n", i, distance_end_simulation[i]);
         printf("distance parcourue epuck%d : %g m\n", i, distance_traveled[i]);
-        printf("Efficacité d'epuck%d : %g\n\n", i, (distance_min_target[i] - RANGE_DETECTION) / distance_traveled[i]);
+        printf("Efficacité d'epuck%d : %g\n", i, (distance_min_target[i] - distance_end_simulation[i]) / distance_traveled[i]);
+        printf(" \n");
 
-        sum_distance_min += (distance_min_target[i] - RANGE_DETECTION);
+        sum_distance_min += (distance_min_target[i] - distance_end_simulation[i]);
         sum_distance_traveled += distance_traveled[i];
       }
 
-      efficacite = sum_distance_min / sum_distance_traveled;
-      printf("Efficacité : %g\n", efficacite);
+      efficiency = sum_distance_min / sum_distance_traveled;
+      printf("Efficacité : %g\n", efficiency);
 
       wb_supervisor_simulation_set_mode(WB_SUPERVISOR_SIMULATION_MODE_PAUSE);
     }

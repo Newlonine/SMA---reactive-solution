@@ -1,25 +1,21 @@
 /*
- * File:          epuck_reactive_behavior_V4.c
- * Date: 19/05/2022
- * Description: The supervisor no longer has a communication with the robots. 
- *              If the robot is in range of the target, it has a certain probability to stop. 
- *              For the first 100 steps, the robot checks if a robot is in its viewpoint and if so, 
- *              it spins around. This version must be used with supervisor_controller_V3.c or supervisor_efficiency.c.
+ * File:          epuck_cognitive_behavior.c
+ * Date: 01/06/2022
+ * Description: This controller uses the epuck_reactive_behavior_V4.c 
+ *              and a function called "compute_odometry" which allows an 
+ *              agent to calculate its position in the environment.
  * Author: Nolwenn
- * Modifications: 19/05 : file created (epuck_reacive_behavior_V3.c)
-                  23/05 : add a receiver
-                  24/05 : remove the last rule which was if there is no oject then rotate to the left
-                          remove the receiver
-                          this version must be used with supervisor_controller_V3.c or supervisor_efficiency.c
-                  30/05 : In the first 100 steps, the robot checks if any robot is in its view angle of camera
-                          If so, it rotates
+ * Modifications:
  */
 
 #include <webots/robot.h>
 #include <webots/distance_sensor.h>
+#include <webots/position_sensor.h>
 #include <webots/motor.h>
 #include <webots/camera_recognition_object.h>
 #include <webots/camera.h>
+#include <webots/receiver.h>
+#include <webots/emitter.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +25,11 @@
 
 #define TIME_STEP 32
 #define RANGE_TARGET 0.20
+#define WB_CHANNEL_BROADCAST -1
+#define EMITTER_RANGE -1
+#define WHEEL_RADIUS 0.02
+#define AXLE_LENGTH 0.052
+#define RANGE (1024 / 2)
 
 /*
  * return the id of a robot
@@ -57,6 +58,41 @@ double random(int min, int max)
   res = (res + min) / 100;
 
   return res;
+}
+
+void send_msg(WbDeviceTag emitter, char message[128])
+{
+  wb_emitter_send(emitter, message, strlen(message) + 1);
+}
+
+// function based on "e-puck" controller in Webots\projects\robots\gctronic\e-puck\controllers\e-puck
+void compute_odometry(WbDeviceTag left_position_sensor, WbDeviceTag right_position_sensor, double robot_position_values[3], double last_ps_values[2])
+{
+  double l = wb_position_sensor_get_value(left_position_sensor);
+  double r = wb_position_sensor_get_value(right_position_sensor);
+
+  double diff_l = l - last_ps_values[0];
+  double diff_r = r - last_ps_values[1];
+
+  double dl = (diff_l * WHEEL_RADIUS); // distance left wheel between two steps
+  double dr = (diff_r * WHEEL_RADIUS); // distance right wheel betwenn two steps
+  double da = (dr - dl) / AXLE_LENGTH; // delta orientation
+
+  last_ps_values[0] = l;
+  last_ps_values[1] = r;
+  if (da < 0.001 && da > -0.001)
+    da = 0;
+
+  printf("-----------------------------------------------\n");
+  printf("estimated distance covered by left wheel: %g m.\n", dl);
+  printf("estimated distance covered by right wheel: %g m.\n", dr);
+  printf("estimated change of orientation: %g rad.\n", da);
+
+  // this doesn't work yet
+  double d = (dl + dr) / 2;
+  robot_position_values[0] += (d * cos(robot_position_values[2] + da / 2));
+  robot_position_values[1] += (d * sin(robot_position_values[2] + da / 2));
+  robot_position_values[2] += da;
 }
 
 int main(int argc, char **argv)
@@ -96,7 +132,23 @@ int main(int argc, char **argv)
   wb_camera_enable(camera, 10);
   wb_camera_recognition_enable(camera, 10);
 
-  /* --- ---*/
+  // receiver
+  WbDeviceTag receiver = wb_robot_get_device("receiver");
+  wb_receiver_enable(receiver, 10);
+  wb_receiver_set_channel(receiver, WB_CHANNEL_BROADCAST); // receive from all channels
+
+  // emitter
+  WbDeviceTag emitter = wb_robot_get_device("emitter");
+  wb_emitter_set_range(emitter, EMITTER_RANGE);
+  wb_emitter_set_channel(emitter, WB_CHANNEL_BROADCAST); // transmits to all channels
+
+  // position sensor
+  WbDeviceTag left_position_sensor = wb_robot_get_device("left wheel sensor");
+  WbDeviceTag right_position_sensor = wb_robot_get_device("right wheel sensor");
+  wb_position_sensor_enable(left_position_sensor, TIME_STEP);
+  wb_position_sensor_enable(right_position_sensor, TIME_STEP);
+
+  /* --- variables ---*/
   // camera stuff
   int nb_objects;
   const WbCameraRecognitionObject *objects_detected;
@@ -115,6 +167,15 @@ int main(int argc, char **argv)
   bool finished = false;
   int r; // random
   int step = 0;
+  double robot_position[3] = {0, 0, 0}; // x, y, theta
+  double last_ps_values[2] = {0, 0};
+
+  // receiver and emitter stuff
+  const char *messageReceived = "";
+  const double *dir;
+  char message[128];
+  double x_msg = 0.0, y_msg = 0.0;
+  double signal, distance;
 
   // lls[0] = speed at t-1; lls[1] = speed at t-2;
   init_array_speed(lls);
@@ -137,10 +198,11 @@ int main(int argc, char **argv)
     if (nb_objects > 0)
     {
       objects_detected = wb_camera_recognition_get_objects(camera);
-      
-      for(i = 0; i < nb_objects; i++){
+
+      for (i = 0; i < nb_objects; i++)
+      {
         model_objects = objects_detected[i].model;
-        
+
         if (!strcmp(model_objects, "cible"))
         {
           target_detected = true;
@@ -153,7 +215,19 @@ int main(int argc, char **argv)
         }
       }
     }
-      
+
+    while (wb_receiver_get_queue_length(receiver) > 0)
+    {
+      messageReceived = wb_receiver_get_data(receiver);
+      dir = wb_receiver_get_emitter_direction(receiver);
+      signal = wb_receiver_get_signal_strength(receiver);
+      distance = sqrt(1 / signal);
+
+      x_msg = dir[0];
+      y_msg = dir[1];
+      wb_receiver_next_packet(receiver);
+    }
+
     // initialization
     if (step < 100 && !strcmp(model_objects, "GCtronic e-puck"))
     {
@@ -178,7 +252,7 @@ int main(int argc, char **argv)
           if (y_cible >= 0.05)
             turn_left(&left_speed, &right_speed, 0.1);
           else if (y_cible < -0.05)
-            turn_right(&left_speed, &right_speed,0.1);
+            turn_right(&left_speed, &right_speed, 0.1);
         }
       }
       else
@@ -266,7 +340,7 @@ int main(int argc, char **argv)
                 if (y_cible >= 0.1)
                   turn_left(&left_speed, &right_speed, 0.1);
                 else if (y_cible < -0.1)
-                  turn_right(&left_speed, &right_speed,0.1);
+                  turn_right(&left_speed, &right_speed, 0.1);
               }
               else
               {
@@ -285,6 +359,11 @@ int main(int argc, char **argv)
       }
     }
 
+    if (step % 50 == 0)
+    {
+      compute_odometry(left_position_sensor, right_position_sensor, robot_position, last_ps_values);
+      printf("(%g, %g)\n", robot_position[0], robot_position[1]);
+    }
     step++;
     wb_motor_set_velocity(left_motor, left_speed);
     wb_motor_set_velocity(right_motor, right_speed);
